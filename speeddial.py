@@ -9,8 +9,15 @@ integer representing the desired CGEventFlags modifier mask. For example:
   SPEEDDIAL_SUPER_MODS=0x00040000  # Control
   SPEEDDIAL_SUPER_MODS=0x001C0000  # Control+Option+Command
 """
+import logging
 import os
 import sys
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(name)s — %(message)s",
+    stream=sys.stderr,
+)
 
 from hotkey_listener import HotkeyListener, MOD_OPTION
 from slot_registry import SlotRegistry

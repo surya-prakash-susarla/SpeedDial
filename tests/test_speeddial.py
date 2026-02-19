@@ -75,7 +75,7 @@ class TestBuildApp:
         # Jump to slot 2 via callback
         listener._handle_event(keycode=19, modifiers=listener._super)
         platform.activate_app.assert_called_with(20)
-        platform.raise_window.assert_called_with(20, 5)
+        platform.raise_window.assert_called_with(20, 5, "iTerm2")
 
     def test_full_assign_jump_round_trip(self):
         from speeddial import build_app
@@ -87,4 +87,4 @@ class TestBuildApp:
         assert app._registry.get(0) is not None
         # Jump slot 0
         listener._handle_event(keycode=29, modifiers=listener._super)
-        platform.raise_window.assert_called_once_with(99, 11)
+        platform.raise_window.assert_called_once_with(99, 11, "Obsidian")
