@@ -13,20 +13,19 @@ _EMPTY = "\u2014"  # em dash
 
 
 def _real_appkit():
+    from types import SimpleNamespace
     from AppKit import (
         NSMenu,
         NSMenuItem,
         NSStatusBar,
         NSVariableStatusItemLength,
     )
-
-    class _AK:
-        NSMenu = NSMenu
-        NSMenuItem = NSMenuItem
-        NSStatusBar = NSStatusBar
-        NSVariableStatusItemLength = NSVariableStatusItemLength
-
-    return _AK()
+    return SimpleNamespace(
+        NSMenu=NSMenu,
+        NSMenuItem=NSMenuItem,
+        NSStatusBar=NSStatusBar,
+        NSVariableStatusItemLength=NSVariableStatusItemLength,
+    )
 
 
 class MenuBar:
