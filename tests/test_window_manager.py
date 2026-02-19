@@ -44,10 +44,20 @@ class TestGetFocusedWindow:
         wm = WindowManager(platform=p)
         assert wm.get_focused_window() is None
 
-    def test_returns_none_when_no_focused_window(self):
+    def test_returns_none_when_title_is_missing(self):
+        # Title is the only required field — without it we can't identify the window
         p = make_platform(frontmost_pid=42, focused_window_title=None, focused_window_id=None)
         wm = WindowManager(platform=p)
         assert wm.get_focused_window() is None
+
+    def test_returns_window_info_when_window_id_unavailable(self):
+        # window_id is best-effort; title alone is enough to assign
+        p = make_platform(frontmost_pid=42, focused_window_title="Chrome", focused_window_id=None)
+        wm = WindowManager(platform=p)
+        w = wm.get_focused_window()
+        assert w is not None
+        assert w.title == "Chrome"
+        assert w.window_id == 0  # fallback sentinel
 
     def test_queries_platform_for_frontmost_pid(self):
         p = make_platform(frontmost_pid=99, focused_window_title="x", focused_window_id=1)
@@ -70,13 +80,13 @@ class TestGetFocusedWindow:
 
 
 class TestRaiseWindow:
-    def test_activates_app_then_raises_window(self):
+    def test_activates_app_then_raises_window_with_title(self):
         p = make_platform(activate_succeeds=True, raise_succeeds=True)
         wm = WindowManager(platform=p)
         w = WindowInfo(pid=10, window_id=5, title="Cursor")
         result = wm.raise_window(w)
         p.activate_app.assert_called_once_with(10)
-        p.raise_window.assert_called_once_with(10, 5)
+        p.raise_window.assert_called_once_with(10, 5, "Cursor")
         assert result is True
 
     def test_returns_false_when_activate_fails(self):

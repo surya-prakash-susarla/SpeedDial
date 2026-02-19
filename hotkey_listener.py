@@ -5,7 +5,10 @@ to on_assign / on_jump callbacks.
 Modifier constants match Quartz CGEventFlags values (masked to the bits we care about).
 The routing logic (_handle_event) is pure Python and fully testable without a real event tap.
 """
+import logging
 from typing import Callable
+
+log = logging.getLogger(__name__)
 
 # Modifier flag masks (CGEventFlags, lower 32 bits)
 MOD_SHIFT   = 0x00020000
@@ -62,9 +65,11 @@ class HotkeyListener:
         assign_mods = (self._super | MOD_SHIFT) & _MOD_MASK
 
         if masked == assign_mods:
+            log.debug("assign slot %d", slot)
             self._on_assign(slot)
             return True
         if masked == jump_mods:
+            log.debug("jump slot %d", slot)
             self._on_jump(slot)
             return True
         return False
@@ -79,12 +84,16 @@ class HotkeyListener:
         def _callback(proxy, event_type, event, refcon):
             if event_type != Quartz.kCGEventKeyDown:
                 return event
-            keycode = Quartz.CGEventGetIntegerValueField(
-                event, Quartz.kCGKeyboardEventKeycode
-            )
-            modifiers = Quartz.CGEventGetFlags(event)
-            consumed = self._handle_event(keycode=keycode, modifiers=modifiers)
-            return None if consumed else event
+            try:
+                keycode = Quartz.CGEventGetIntegerValueField(
+                    event, Quartz.kCGKeyboardEventKeycode
+                )
+                modifiers = Quartz.CGEventGetFlags(event)
+                consumed = self._handle_event(keycode=keycode, modifiers=modifiers)
+                return None if consumed else event
+            except Exception:
+                log.exception("error in hotkey callback")
+                return event
 
         self._callback_ref = _callback  # keep alive
         self._tap = Quartz.CGEventTapCreate(
@@ -107,9 +116,11 @@ class HotkeyListener:
             Quartz.kCFRunLoopCommonModes,
         )
         Quartz.CGEventTapEnable(self._tap, True)
+        log.info("hotkey listener started (super=0x%08x)", self._super)
 
     def stop(self) -> None:
         if self._tap is not None:
             import Quartz
             Quartz.CGEventTapEnable(self._tap, False)
             self._tap = None
+            log.info("hotkey listener stopped")
