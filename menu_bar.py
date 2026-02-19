@@ -28,6 +28,11 @@ def _real_appkit():
     )
 
 
+def _make_item(ak, title: str, action: str = "", key: str = ""):
+    """Create an NSMenuItem using the correct pyobjc alloc/init pattern."""
+    return ak.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, action, key)
+
+
 class MenuBar:
     def __init__(self, registry: SlotRegistry, appkit=None, on_quit=None):
         self._registry = registry
@@ -41,7 +46,7 @@ class MenuBar:
             self._status_item.button().setTitle_("⌨")
         except Exception:
             self._status_item.setTitle_("⌨")
-        self._menu = self._ak.NSMenu()
+        self._menu = self._ak.NSMenu.alloc().init()
         self._status_item.setMenu_(self._menu)
 
     def refresh(self) -> None:
@@ -52,10 +57,10 @@ class MenuBar:
             window = slots[slot]
             title = window.title if window is not None else _EMPTY
             label = f"[{slot}]  {title}"
-            item = self._ak.NSMenuItem(label, "", "")
-            item.setEnabled_(False)  # slots are display-only
+            item = _make_item(self._ak, label)
+            item.setEnabled_(False)
             self._menu.addItem_(item)
 
-        self._menu.addItem_(self._ak.NSMenuItem("", "", ""))  # separator
-        quit_item = self._ak.NSMenuItem("Quit SpeedDial", "terminate:", "q")
+        self._menu.addItem_(self._ak.NSMenuItem.separatorItem())
+        quit_item = _make_item(self._ak, "Quit SpeedDial", "terminate:", "q")
         self._menu.addItem_(quit_item)
